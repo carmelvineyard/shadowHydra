@@ -72,6 +72,8 @@
           updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
           authorizeButton.onclick = handleAuthClick;
           signoutButton.onclick = handleSignoutClick;
+          // Load addEvent client
+          loadClient();
         });
       }
       /**
@@ -93,6 +95,7 @@
        */
       function handleAuthClick(event) {
         gapi.auth2.getAuthInstance().signIn();
+        loadClient();
       }
       /**
        *  Sign out the user upon button click.
@@ -241,42 +244,65 @@
 
 //================Add Event Function===================
 
-      var sum = $("#eventName").val().trim(); //IDs are for theoretical inputs in a form.
-      var loc = $("#location").val().trim();
-      var sTime = $("#startTime").val().trim();//needs to have date added to it- reconcile with our "day" variable?
-      var eTime = $("#endTime").val().trim(); //needs to have date attached, Google wants datetime.
-      //var tZone = 'America/New_York'; I'm not sure about this one. Could we
-      //grab the user's time zone? It's here because it's in the example. I 
-      //put it in so that we could hard set it for demonstration but if we can
-      //grab the user's time zone that would be preferable.
+      function loadClient() {
+        return gapi.client.load("https://content.googleapis.com/discovery/v1/apis/calendar/v3/rest")
+          .then(function() {
+            console.log("GAPI client loaded for API");
+          }, function(error) {
+            console.error("Error loading GAPI client for API");
+          });
+      }   //  loadClient close
 
 
+      $("#newEvent").on("click", function execute(event) {
+      event.preventDefault();
+      var Key = "AIzaSyAbFH5WoUBGwol0jmrhMD-vkxDKqSsffoU";
+
+      $.ajax({
+          url: "https://www.googleapis.com/calendar/v3/calendars/primary/events?fields=summary%2Clocation%2Cstart.dateTime%2Cend.dateTime&key=" +Key,
+          method: "POST"
+        })
+        .done(function(response) {
+          console.log(response);
 
 
-      $("#newEvent").on("click", function execute() {
+        var sum = $("#eventName").val().trim(); //IDs are for theoretical inputs in a form.
+        var loc = $("#location").val().trim();
+        var sTime = $("#startTime").val().trim();//needs to have date added to it- reconcile with our "day" variable?
+        var eTime = $("#endTime").val().trim(); //needs to have date attached, Google wants datetime.
+        //var tZone = 'America/New_York'; I'm not sure about this one. Could we
+        //grab the user's time zone? It's here because it's in the example. I 
+        //put it in so that we could hard set it for demonstration but if we can
+        //grab the user's time zone that would be preferable.
+
+
         console.log("sTime: ", sTime);
         console.log("eTime: ", eTime);
-        return gapi.client.calendar.events.insert({
-          "calendarId": "primary",
-          "sendNotifications": "false",
-          "supportsAttachments": "false",
-          "resource": {
-            "location": loc,
-            "summary": sum,
-            "start": {
-              "dateTime": sTime
-            },
-            "end": {
-              "dateTime": eTime
-            } //end close
-            },  // resource close
-          "alt": "json",
-          "prettyPrint": "true"
-        });  //return insert close
-
+        if (eTime === "") {
+          $("#alert-form").text("Please complete the form");
+        } else {
+            return gapi.client.calendar.events.insert({
+              "calendarId": "primary",
+              "sendNotifications": "false",
+              "supportsAttachments": "false",
+              "resource": {
+                "location": loc,
+                "summary": sum,
+                "start": {
+                  "dateTime": sTime
+                },
+                "end": {
+                  "dateTime": eTime
+                } //end close
+                },  // resource close
+              "alt": "json",
+              "prettyPrint": "true"
+            });  //return insert close
+          }  //else close
         then(function(response) {
                 // Handle the results here (response.result has the parsed body).
                 console.log("Response", response);
+                
           }, function(error) {
                 console.error("Execute error", error);
           });
@@ -285,6 +311,12 @@
             gapi.auth2.init({client_id: '957547373869-me0jf26toqdej2vbqaqcnb6v6r17r9qf.apps.googleusercontent.com'});
           });
 
-          
+          $("#eventName").val("");
+          $("#location").val("");
+          $("#startTime").val("");
+          $("#endTime").val("");
+
+        });//done function close
+         
 
       });// onClick close   

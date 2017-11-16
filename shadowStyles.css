@@ -121,3 +121,6 @@ i, #sign-out {
     background-color: darkgray;
 }
 
+#alert-form {
+	color: #aa0000;
+}
